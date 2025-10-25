@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Icon from "@/components/ui/icon";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface Photo {
   id: number;
@@ -10,8 +11,7 @@ interface Photo {
 
 const Index = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-
-  const photos: Photo[] = [
+  const [photos, setPhotos] = useState<Photo[]>([
     {
       id: 1,
       url: "https://cdn.poehali.dev/projects/0f47e069-ef9e-4d86-be95-8d460956e300/files/66ec1048-a94a-4cff-b88b-ff4f95832f22.jpg",
@@ -42,7 +42,59 @@ const Index = () => {
       url: "https://cdn.poehali.dev/projects/0f47e069-ef9e-4d86-be95-8d460956e300/files/a4447602-3b45-418f-a979-60750f4ffd5c.jpg",
       title: "Город"
     }
-  ];
+  ]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const newPhotos: Photo[] = [];
+    let filesProcessed = 0;
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Ошибка",
+          description: `Файл ${file.name} не является изображением`,
+          variant: "destructive"
+        });
+        filesProcessed++;
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const url = e.target?.result as string;
+        const newPhoto: Photo = {
+          id: Date.now() + filesProcessed,
+          url,
+          title: file.name.replace(/\.[^/.]+$/, "")
+        };
+        newPhotos.push(newPhoto);
+        filesProcessed++;
+
+        if (filesProcessed === files.length) {
+          setPhotos(prev => [...newPhotos, ...prev]);
+          toast({
+            title: "Успешно!",
+            description: `Загружено фото: ${newPhotos.length}`
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,8 +105,20 @@ const Index = () => {
               Фотогалерея
             </h1>
             <div className="flex gap-4">
-              <button className="p-2 rounded-lg bg-card hover:bg-card/80 transition-all hover-scale">
-                <Icon name="Upload" size={24} className="text-foreground" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <button 
+                onClick={handleUploadClick}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg gradient-primary text-white hover:opacity-90 transition-all hover-scale font-medium"
+              >
+                <Icon name="Upload" size={20} />
+                <span className="hidden sm:inline">Загрузить</span>
               </button>
               <button className="p-2 rounded-lg bg-card hover:bg-card/80 transition-all hover-scale">
                 <Icon name="Settings" size={24} className="text-foreground" />
@@ -70,7 +134,7 @@ const Index = () => {
             <div className="w-1 h-8 gradient-primary rounded-full"></div>
             <h2 className="text-3xl font-bold text-foreground">Альбомы</h2>
           </div>
-          <p className="text-muted-foreground">Коллекция моих лучших фотографий</p>
+          <p className="text-muted-foreground">Коллекция моих лучших фотографий • {photos.length} фото</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
