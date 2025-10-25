@@ -114,7 +114,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in">
-              Фотогалерея
+              Сохрани галерею
             </h1>
             <div className="flex gap-4">
               <input
