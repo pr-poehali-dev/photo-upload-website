@@ -96,6 +96,18 @@ const Index = () => {
     }
   };
 
+  const handleDeletePhoto = (photoId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotos(prev => prev.filter(p => p.id !== photoId));
+    if (selectedPhoto?.id === photoId) {
+      setSelectedPhoto(null);
+    }
+    toast({
+      title: "Удалено",
+      description: "Фотография удалена из галереи"
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-10 bg-background/80">
@@ -145,6 +157,13 @@ const Index = () => {
               style={{ animationDelay: `${index * 0.1}s` }}
               onClick={() => setSelectedPhoto(photo)}
             >
+              <button
+                onClick={(e) => handleDeletePhoto(photo.id, e)}
+                className="absolute top-3 right-3 z-10 p-2 rounded-full bg-destructive/90 hover:bg-destructive transition-all opacity-0 group-hover:opacity-100 hover-scale"
+                aria-label="Удалить фото"
+              >
+                <Icon name="Trash2" size={18} className="text-white" />
+              </button>
               <div className="aspect-square relative overflow-hidden">
                 <img
                   src={photo.url}
